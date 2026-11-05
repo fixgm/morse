@@ -1,15 +1,32 @@
 package com.my_project.morse;
 
+import com.my_project.morse.core.Alphabet;
+import com.my_project.morse.core.MorseCoder;
 import com.my_project.morse.exception.MorseException;
+import com.my_project.morse.service.FileManager;
+import com.my_project.morse.service.Validator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 public class MorseApp {
 
-    private static final Scanner scanner = new Scanner(System.in);
+    private final Scanner scanner = new Scanner(System.in);
+    private final FileManager fileManager = new FileManager();
+    private final Validator validator = new Validator();
+    private final MorseCoder morseCoder = new MorseCoder();
 
-    static void main(String[] args) {
 
+    static void main(String[] args) throws MorseException {
+
+        new MorseApp().run();
+
+    }
+
+
+    private void run() throws MorseException {
         // CLI - command line interface
         System.out.println("Азбука Морзе: кодирование и декодирования файлов");
 
@@ -40,7 +57,8 @@ public class MorseApp {
         }
     }
 
-    private static void printMenu() {
+
+    private void printMenu() {
         System.out.println();
         System.out.println("1. Закодировать файл");
         System.out.println("2. Декодировать файл");
@@ -48,22 +66,53 @@ public class MorseApp {
         System.out.println("0. Выход");
     }
 
-    private static void encodeFile() throws MatchException {
-        // TODO: спросить файлы, прочитать строки, проверить и закодировать каждую, записать результат
-        System.out.println("Кодировка пока не реализована");
+    private void encodeFile() throws MorseException {
+        String input = ask("Исходный файл: ");
+        String output = ask("Файл для результата: ");
+        fileManager.checkDifferent(input, output);
+
+        List<String> lines = fileManager.readLines(input);
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            validator.validateText(lines.get(i), i + 1);
+            result.add(morseCoder.encode(lines.get(i)));
+        }
+        fileManager.writeLines(output, result);
+        printDown(output, result);
+
     }
 
-    private static void decodeFile() throws MatchException {
-        // TODO: тоже для декодирования
-        System.out.println("Декодирование пока не реализовано");
+    private void printDown(String output, List<String> result) {
+        System.out.println("Готова, строк: " + result.size() + ", результат в файле " + output);
+        if (result.isEmpty()) {
+            System.out.println("Первая строка: " + result.get(0));
+        }
     }
 
-    private static void printAlphabet() {
-        // TODO: вывести азбуку
-        System.out.println("Алфавит пока не работает");
+    private void decodeFile() throws MorseException {
+        String input = ask("Файл с кодом Морзе");
+        String output = ask("Файл для результата: ");
+        fileManager.checkDifferent(input, output);
+
+        List<String> lines = fileManager.readLines(input);
+        List<String> result = new ArrayList<>();
+        for (int i = 0; i < lines.size(); i++) {
+            validator.validateMorse(lines.get(i), i + 1);
+            result.add(morseCoder.decode(lines.get(i)));
+        }
+        fileManager.writeLines(output, result);
+        printDown(output, result);
     }
 
-    private static String ask(String promt) {
+    private void printAlphabet() {
+        for (Map.Entry<Character, String> entry: Alphabet.table().entrySet()) {
+            char symbol = entry.getKey();
+            String name = symbol == ' ' ? "пробел" : String.valueOf(symbol);
+            System.out.println(name + " " + entry.getValue());
+        }
+    }
+
+    private String ask(String promt) {
         System.out.println(promt);
         return scanner.nextLine();
     }
