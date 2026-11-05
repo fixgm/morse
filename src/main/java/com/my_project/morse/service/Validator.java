@@ -1,15 +1,29 @@
 package com.my_project.morse.service;
 
+import com.my_project.morse.core.Alphabet;
 import com.my_project.morse.exception.MorseException;
 
 public class Validator {
 
     public void validateText(String line, int lineNumber) throws MorseException {
-        // TODO: каждый символ строки есть в азбуке, иначе исключение с номером строки и позиции
+        for (int i = 0; i < line.length(); i++) {
+            char symbol = line.charAt(i);
+            if (!Alphabet.isSupported(symbol)) {
+                throw new MorseException("Строка " + lineNumber + ", позиция " + (i + 1)
+                        + ": символа '" + symbol + "' нет в алфавите");
+            }
+        }
     }
 
     public void validateMorse(String line, int lineNumber) throws MorseException {
-        // TODO: каждый код строки есть в азбуке, иначе исключение с номером строки и кода
+        String[] codes = line.trim().split(" +");
+        for (int i = 0; i < codes.length; i++) {
+            String code = codes[i];
+            if (!code.isEmpty() && !Alphabet.isKnownCode(code)) {
+                throw new MorseException("Строка " + lineNumber + ", код " + (i + 1)
+                + ": кода '" + code + "' нет в алфавите");
+            }
+        }
     }
 
 }
